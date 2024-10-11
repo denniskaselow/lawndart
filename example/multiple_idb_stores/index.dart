@@ -1,9 +1,12 @@
-import 'package:lawndart/lawndart.dart';
+// ignore_for_file: avoid_print
+
 import 'dart:html';
 
-main() async {
+import 'package:lawndart/lawndart.dart';
+
+void main() async {
   await window.indexedDB?.deleteDatabase('temptestdb');
-  Store store = await Store.open('temptestdb', 'store1');
+  final Store store = await Store.open('temptestdb', 'store1');
   print('opened 1');
   await Store.open('temptestdb', 'store2');
   print('opened 2');

@@ -1,3 +1,9 @@
+## 0.11.0
+
+* BREAKING CHANGE: Removed support for everything except IndexedDb and removed methods that did multiple actions in
+  a single transaction (`removeByKeys` and `batch`)
+* uses `package:web` and Dart 3.5
+
 ## 0.10.0
 
 * Dart 2 compliance

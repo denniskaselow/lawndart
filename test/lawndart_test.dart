@@ -12,14 +12,12 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-library store_tests;
-
 import 'dart:async';
-import 'dart:indexed_db';
-import 'package:test/test.dart';
-import 'package:lawndart/lawndart.dart';
 
-typedef Future<Store> StoreGenerator();
+import 'package:lawndart/lawndart.dart';
+import 'package:test/test.dart';
+
+typedef StoreGenerator = Future<Store> Function();
 
 void run(StoreGenerator generator) {
   late Store store;
@@ -31,140 +29,106 @@ void run(StoreGenerator generator) {
     });
 
     test('keys is empty', () async {
-      var keys = await store.keys().toList();
+      final keys = await store.keys().toList();
       expect(keys, hasLength(0));
     });
 
-    test('get by key return null', () {
-      Future future = store.getByKey("foo");
-      expect(future, completion(null));
+    test('get by key return null', () async {
+      final value = await store.getByKey('foo');
+      expect(value, isNull);
     });
 
     test('get by keys return empty collection', () async {
-      var list = await store.getByKeys(["foo"]).toList();
+      final list = await store.getByKeys(['foo']).toList();
       expect(list, hasLength(0));
     });
 
-    test('save completes', () {
-      Future future = store.save("value", "key");
-      expect(future, completion("key"));
+    test('save completes', () async {
+      final value = await store.save('value', 'key');
+      expect(value, equals('key'));
     });
 
-    test('exists returns false', () {
-      Future future = store.exists("foo");
-      expect(future, completion(false));
+    test('exists returns false', () async {
+      final value = await store.exists('foo');
+      expect(value, isFalse);
     });
 
-    test('all is empty', () {
-      Future future = store.all().toList();
+    test('all is empty', () async {
+      final future = store.all().toList();
       expect(future, completion(hasLength(0)));
     });
 
-    test('remove by key completes', () {
-      Future future = store.removeByKey("foo");
+    test('remove by key completes', () async {
+      final future = store.removeByKey('foo');
       expect(future, completes);
     });
 
-    test('remove by keys completes', () {
-      Future future = store.removeByKeys(["foo"]);
-      expect(future, completes);
-    });
-
-    test('nuke completes', () {
-      Future future = store.nuke();
-      expect(future, completes);
-    });
-
-    test('batch completes', () {
-      Future future = store.batch({'foo': 'bar'});
+    test('nuke completes', () async {
+      final future = store.nuke();
       expect(future, completes);
     });
   });
 
   group('with a few values', () {
     setUp(() async {
-      // ensure it's clear for each test, see http://dartbug.com/8157
       store = await generator();
 
       await store.nuke();
-      await store.save("world", "hello");
-      await store.save("is fun", "dart");
+      await store.save('world', 'hello');
+      await store.save('is fun', 'dart');
     });
 
-    test('keys has them', () {
-      Future<Iterable> future = store.keys().toList();
-      future.then((Iterable keys) {
-        expect(keys, hasLength(2));
-        expect(keys, contains("hello"));
-        expect(keys, contains("dart"));
-      });
-      expect(future, completes);
+    test('keys has them', () async {
+      final Iterable<String> keys = await store.keys().toList();
+
+      expect(keys, hasLength(2));
+      expect(keys, contains('hello'));
+      expect(keys, contains('dart'));
     });
 
-    test('get by key', () {
-      Future future = store.getByKey("hello");
-      future.then((value) {
-        expect(value, "world");
-      });
-      expect(future, completes);
+    test('get by key', () async {
+      final value = await store.getByKey('hello');
+
+      expect(value, equals('world'));
     });
 
-    test('get by keys', () {
-      Future future = store.getByKeys(["hello", "dart"]).toList();
-      future.then((values) {
-        expect(values, hasLength(2));
-        expect(values.contains("world"), true);
-        expect(values.contains("is fun"), true);
-      });
-      expect(future, completes);
+    test('get by keys', () async {
+      final values = await store.getByKeys(['hello', 'dart']).toList();
+      expect(values, hasLength(2));
+      expect(values.contains('world'), true);
+      expect(values.contains('is fun'), true);
     });
 
-    test('exists is true', () {
-      Future future = store.exists("hello");
-      future.then((exists) {
-        expect(exists, true);
-      });
-      expect(future, completes);
+    test('exists is true', () async {
+      final exists = await store.exists('hello');
+
+      expect(exists, true);
     });
 
-    test('all has everything', () {
-      Future future = store.all().toList();
-      future.then((all) {
-        expect(all, hasLength(2));
-        expect(all.contains("world"), true);
-        expect(all.contains("is fun"), true);
-      });
-      expect(future, completes);
+    test('all has everything', () async {
+      final all = await store.all().toList();
+
+      expect(all, hasLength(2));
+      expect(all.contains('world'), true);
+      expect(all.contains('is fun'), true);
     });
 
-    test('remove by key', () {
-      Future future =
-          store.removeByKey("hello").then((_) => store.all().toList());
-      future.then((remaining) {
-        expect(remaining, hasLength(1));
-        expect(remaining.contains("world"), false);
-        expect(remaining.contains("is fun"), true);
-      });
-      expect(future, completes);
+    test('remove by key', () async {
+      final remaining =
+          await store.removeByKey('hello').then((_) => store.all().toList());
+
+      expect(remaining, hasLength(1));
+      expect(remaining.contains('world'), false);
+      expect(remaining.contains('is fun'), true);
     });
   });
 }
 
 void main() {
-  group('memory', () {
-    run(() => MemoryStore.open());
+  group('indexed db store0', () {
+    run(() async => IndexedDbStore.open('test-db', 'test-store0'));
   });
-
-  group('local storage', () {
-    run(() => LocalStorageStore.open());
+  group('indexed db store1', () {
+    run(() async => IndexedDbStore.open('test-db', 'test-store1'));
   });
-
-  if (IdbFactory.supported) {
-    group('indexed db store0', () {
-      run(() => IndexedDbStore.open("test-db", "test-store0"));
-    });
-    group('indexed db store1', () {
-      run(() => IndexedDbStore.open("test-db", "test-store1"));
-    });
-  }
 }

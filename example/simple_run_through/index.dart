@@ -1,32 +1,26 @@
-library index;
+import 'dart:js_interop';
 
 import 'package:lawndart/lawndart.dart';
-import 'dart:html';
-import 'dart:indexed_db';
+import 'package:web/web.dart';
 
-runThrough(Store store, String id) async {
-  var elem = querySelector('#$id');
-  if (elem != null) {
+Future<void> runThrough(Store store, String id) async {
+  if (document.querySelector('#$id') case final HTMLParagraphElement elem?) {
     try {
       await store.nuke();
-      await store.save(id, "hello");
-      await store.save("is fun", "dart");
-      await for (var value in store.all()) {
-        elem.appendText('$value, ');
+      await store.save(id, 'hello');
+      await store.save('is fun', 'dart');
+      await for (final value in store.all()) {
+        elem.append('$value, '.toJS);
       }
-      elem.appendText('all done');
+      elem.append('all done'.toJS);
+    // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       elem.text = e.toString();
     }
   }
 }
 
-main() async {
-  if (IdbFactory.supported) {
-    var store = await IndexedDbStore.open('test', 'test');
-    runThrough(store, 'indexeddb');
-  } else {
-    querySelector('#indexeddb')?.text =
-        'IndexedDB is not supported in your browser';
-  }
+void main() async {
+  final store = await IndexedDbStore.open('test', 'test');
+  await runThrough(store, 'indexeddb');
 }

@@ -3,12 +3,13 @@ version: 0.11.0
 description: An easier way to access storage APIs in the browser.
 
 environment:
-  sdk: '>=2.12.0-0.0.dev <3.0.0'
+  sdk: ^3.5.0
+
+dependencies:
+  web: ^1.1.0
 
 dev_dependencies:
   build_runner: any
   build_test: any
   build_web_compilers: any
-  test: ^1.16.0-nullsafety.9
-
-
+  test: any
